@@ -1,8 +1,8 @@
-datadir: /data/CMIP6/AWI-ESM
+datadir: /home/as26840@ens.ad.etsmtl.ca/data/CMIP6/AWI-ESM
 name: temperature
 cmip_name: ta
 era_name: t
 run: r1i1p1f1
 res:
-  - 1.40625
-  # - 5.625
+  # - 1.40625
+  - 5.625

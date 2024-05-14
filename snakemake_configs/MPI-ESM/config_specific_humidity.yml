@@ -1,4 +1,4 @@
-datadir: /data/CMIP6/MPI-ESM
+datadir: /home/as26840@ens.ad.etsmtl.ca/data/CMIP6/MPI-ESM
 server_prefix: http://esgf-data1.llnl.gov/thredds/fileServer/css03_data/CMIP6/CMIP
 name: specific_humidity
 cmip_name: hus
@@ -7,5 +7,5 @@ output_type: 6hrPlevPt
 run: r1i1p1f1
 version: v20190815
 res:
-  - 1.40625
-  # - 5.625
+  # - 1.40625
+  - 5.625
