@@ -11,7 +11,7 @@
 #SBATCH --gres=gpu:2
 #SBATCH --ntasks-per-node=32
 #SBATCH --mem=19000M
-#SBATCH --time=0-20:00
+#SBATCH --time=0-00:30
 #SBATCH --account=rrg-ebrahimi
 
 nvidia-smi
