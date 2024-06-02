@@ -43,7 +43,7 @@ cd $SLURM_TMPDIR
 cp -r /home/aamer98/projects/def-ebrahimi/aamer98/repos/ClimaX .
 cd ClimaX
 
-python src/climax/climate_projection/train.py --config configs/climate_projection.yaml --trainer.strategy=ddp --trainer.devices=2 --trainer.max_epochs=50 --data.root_dir=$SLURM_TMPDIR/climate_bench/5.625deg --data.batch_size=8 --model.pretrained_path='https://huggingface.co/tungnd/climax/resolve/main/5.625deg.ckpt' --model.lr=5e-4 --model.beta_1="0.9" --model.beta_2="0.99" --model.weight_decay=1e-5
+python src/climax/climate_projection/train.py --config configs/climate_projection.yaml --trainer.strategy=ddp --trainer.devices=2 --trainer.max_epochs=50 --data.root_dir=$SLURM_TMPDIR/climate_bench/5.625deg --data.batch_size=8 --model.pretrained_path='/home/aamer98/projects/def-ebrahimi/aamer98/repos/ClimaX/checkpoints/5.625deg.ckpt' --model.lr=5e-4 --model.beta_1="0.9" --model.beta_2="0.99" --model.weight_decay=1e-5
 
 
 echo "----------------------------------------<End of program>------------------------------------"
