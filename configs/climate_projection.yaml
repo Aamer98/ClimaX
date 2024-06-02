@@ -2,11 +2,11 @@ seed_everything: 42
 
 # ---------------------------- TRAINER -------------------------------------------
 trainer:
-  default_root_dir: ${oc.env:AMLT_OUTPUT_DIR,/home/tungnd/ClimaX/exps/climate_projection_climax}
+  default_root_dir: ${oc.env:AMLT_OUTPUT_DIR,/home/aamer98/projects/def-ebrahimi/aamer98/repos/ClimaX/exps/climate_projection_climax}
 
   precision: 16
 
-  gpus: null
+  gpus: 2
   num_nodes: 1
   accelerator: gpu
   strategy: ddp
@@ -25,7 +25,7 @@ trainer:
   logger:
     class_path: pytorch_lightning.loggers.tensorboard.TensorBoardLogger
     init_args:
-      save_dir: ${trainer.default_root_dir}/logs
+      save_dir: /home/aamer98/projects/def-ebrahimi/aamer98/repos/ClimaX/logs
       name: null
       version: null
       log_graph: False
@@ -39,7 +39,7 @@ trainer:
 
     - class_path: pytorch_lightning.callbacks.ModelCheckpoint
       init_args:
-        dirpath: "${trainer.default_root_dir}/checkpoints/"
+        dirpath: "/home/aamer98/projects/def-ebrahimi/aamer98/repos/ClimaX/checkpoints"
         monitor: "val/w_mse" # name of the logged metric which determines when model is improving
         mode: "min" # "max" means higher metric value is better, can be also "min"
         save_top_k: 1 # save k best models (determined by above metric)
@@ -71,7 +71,7 @@ model:
   max_epochs: 600
   warmup_start_lr: 1e-8
   eta_min: 1e-8
-  pretrained_path: "https://huggingface.co/tungnd/climax/resolve/main/5.625deg.ckpt"
+  pretrained_path: "/home/aamer98/projects/def-ebrahimi/aamer98/repos/ClimaX/checkpoints/5.625deg.ckpt"
 
   net:
     class_path: climax.climate_projection.arch.ClimaXClimateBench

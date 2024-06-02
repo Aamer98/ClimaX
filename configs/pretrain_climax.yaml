@@ -2,11 +2,11 @@ seed_everything: 42
 
 # ---------------------------- TRAINER -------------------------------------------
 trainer:
-  default_root_dir: ${oc.env:OUTPUT_DIR,/home/t-tungnguyen/ClimaX/exps/pretrain_climax}
+  default_root_dir: ${oc.env:OUTPUT_DIR,/home/aamer98/projects/def-ebrahimi/aamer98/repos/ClimaX/exps/pretrain_climax}
 
   precision: 16
 
-  gpus: null
+  gpus: 2
   num_nodes: 1
   accelerator: gpu
   strategy: ddp
@@ -28,7 +28,7 @@ trainer:
   logger:
     class_path: pytorch_lightning.loggers.tensorboard.TensorBoardLogger
     init_args:
-      save_dir: ${trainer.default_root_dir}/logs
+      save_dir: /home/aamer98/projects/def-ebrahimi/aamer98/repos/ClimaX/logs
       name: null
       version: null
       log_graph: False
@@ -42,7 +42,7 @@ trainer:
 
     - class_path: pytorch_lightning.callbacks.ModelCheckpoint
       init_args:
-        dirpath: "${trainer.default_root_dir}/checkpoints"
+        dirpath: "/home/aamer98/projects/def-ebrahimi/aamer98/repos/ClimaX/checkpoints"
         save_last: True # additionaly always save model from last epoch
         verbose: False
         filename: "epoch_{epoch:03d}"
