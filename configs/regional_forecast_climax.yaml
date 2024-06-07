@@ -2,7 +2,7 @@ seed_everything: 42
 
 # ---------------------------- TRAINER -------------------------------------------
 trainer:
-  default_root_dir: ${oc.env:OUTPUT_DIR,/home/aamer98/projects/def-ebrahimi/aamer98/repos/ClimaX/exps/regional_forecast_climax}
+  default_root_dir: ${oc.env:OUTPUT_DIR,/home/as26840@ens.ad.etsmtl.ca/repos/ClimaX/exps/regional_forecast_climax}
 
   precision: 16
 
@@ -25,7 +25,7 @@ trainer:
   logger:
     class_path: pytorch_lightning.loggers.tensorboard.TensorBoardLogger
     init_args:
-      save_dir: /home/aamer98/projects/def-ebrahimi/aamer98/repos/ClimaX/logs
+      save_dir: /home/as26840@ens.ad.etsmtl.ca/repos/ClimaX/logs
       name: null
       version: null
       log_graph: False
@@ -39,7 +39,7 @@ trainer:
 
     - class_path: pytorch_lightning.callbacks.ModelCheckpoint
       init_args:
-        dirpath: "/home/aamer98/projects/def-ebrahimi/aamer98/repos/ClimaX/checkpoints"
+        dirpath: "/home/as26840@ens.ad.etsmtl.ca/repos/ClimaX/checkpoints"
         monitor: "val/w_rmse" # name of the logged metric which determines when model is improving
         mode: "min" # "max" means higher metric value is better, can be also "min"
         save_top_k: 1 # save k best models (determined by above metric)
@@ -138,7 +138,7 @@ model:
 
 # ---------------------------- DATA -------------------------------------------
 data:
-  root_dir: /datadrive/datasets/5.625deg_equally_np/
+  root_dir: /home/as26840@ens.ad.etsmtl.ca/data/ERA5_shards
   variables: [
       "land_sea_mask",
       "orography",

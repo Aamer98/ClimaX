@@ -1,29 +1,25 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT license.
+from typing import Any, Dict
 
-# credits: https://github.com/ashleve/lightning-hydra-template/blob/main/src/models/mnist_module.py
-from typing import Any
-
+import numpy as np
 import torch
 from pytorch_lightning import LightningModule
-from torchvision.transforms import transforms
-
-from climax.arch import ClimaX
+from climax.climate_projection.arch import ClimaXClimateBench
 from climax.utils.lr_scheduler import LinearWarmupCosineAnnealingLR
 from climax.utils.metrics import (
-    lat_weighted_acc,
-    lat_weighted_mse,
+    mse,
     lat_weighted_mse_val,
+    lat_weighted_nrmse,
     lat_weighted_rmse,
 )
 from climax.utils.pos_embed import interpolate_pos_embed
+from torchvision.transforms import transforms
 
 
-class GlobalForecastModule(LightningModule):
-    """Lightning module for global forecasting with the ClimaX model.
+class ClimateProjectionModule(LightningModule):
+    """Lightning module for climate projection with the ClimaXClimateBench model.
 
     Args:
-        net (ClimaX): ClimaX model.
+        net (ClimaXClimateBench): ClimaXClimateBench model.
         pretrained_path (str, optional): Path to pre-trained checkpoint.
         lr (float, optional): Learning rate.
         beta_1 (float, optional): Beta 1 for AdamW.
@@ -34,17 +30,16 @@ class GlobalForecastModule(LightningModule):
         warmup_start_lr (float, optional): Starting learning rate for warmup.
         eta_min (float, optional): Minimum learning rate.
     """
-
     def __init__(
         self,
-        net: ClimaX,
+        net: ClimaXClimateBench,
         pretrained_path: str = "",
         lr: float = 5e-4,
         beta_1: float = 0.9,
         beta_2: float = 0.99,
         weight_decay: float = 1e-5,
-        warmup_epochs: int = 10000,
-        max_epochs: int = 200000,
+        warmup_epochs: int = 60,
+        max_epochs: int = 600,
         warmup_start_lr: float = 1e-8,
         eta_min: float = 1e-8,
     ):
@@ -52,13 +47,14 @@ class GlobalForecastModule(LightningModule):
         self.save_hyperparameters(logger=False, ignore=["net"])
         self.net = net
         if len(pretrained_path) > 0:
-            self.load_pretrained_weights(pretrained_path)
+            self.load_mae_weights(pretrained_path)
 
-    def load_pretrained_weights(self, pretrained_path):
+    def load_mae_weights(self, pretrained_path):
         if pretrained_path.startswith("http"):
-            checkpoint = torch.hub.load_state_dict_from_url(pretrained_path)
+            checkpoint = torch.hub.load_state_dict_from_url(pretrained_path, map_location=torch.device("cpu"))
         else:
             checkpoint = torch.load(pretrained_path, map_location=torch.device("cpu"))
+
         print("Loading pre-trained checkpoint from: %s" % pretrained_path)
         checkpoint_model = checkpoint["state_dict"]
         # interpolate positional embedding
@@ -70,12 +66,17 @@ class GlobalForecastModule(LightningModule):
                 raise ValueError(
                     "Pretrained checkpoint does not have token_embeds.proj_weights for parallel processing. Please convert the checkpoints first or disable parallel patch_embed tokenization."
                 )
-
-        # checkpoint_keys = list(checkpoint_model.keys())
+        
         for k in list(checkpoint_model.keys()):
             if "channel" in k:
                 checkpoint_model[k.replace("channel", "var")] = checkpoint_model[k]
                 del checkpoint_model[k]
+            
+            if 'token_embeds' in k or 'head' in k: # initialize embedding from scratch
+                print(f"Removing key {k} from pretrained checkpoint")
+                del checkpoint_model[k]
+                continue
+                
         for k in list(checkpoint_model.keys()):
             if k not in state_dict.keys() or checkpoint_model[k].shape != state_dict[k].shape:
                 print(f"Removing key {k} from pretrained checkpoint")
@@ -103,9 +104,8 @@ class GlobalForecastModule(LightningModule):
 
     def training_step(self, batch: Any, batch_idx: int):
         x, y, lead_times, variables, out_variables = batch
-        breakpoint()
 
-        loss_dict, _ = self.net.forward(x, y, lead_times, variables, out_variables, [lat_weighted_mse], lat=self.lat)
+        loss_dict, _ = self.net.forward(x, y, lead_times, variables, out_variables, [mse], lat=self.lat)
         loss_dict = loss_dict[0]
         for var in loss_dict.keys():
             self.log(
@@ -115,18 +115,12 @@ class GlobalForecastModule(LightningModule):
                 on_epoch=False,
                 prog_bar=True,
             )
-        loss = loss_dict["loss"]
+        loss = loss_dict['loss']
 
         return loss
 
     def validation_step(self, batch: Any, batch_idx: int):
         x, y, lead_times, variables, out_variables = batch
-
-        if self.pred_range < 24:
-            log_postfix = f"{self.pred_range}_hours"
-        else:
-            days = int(self.pred_range / 24)
-            log_postfix = f"{days}_days"
 
         all_loss_dicts = self.net.evaluate(
             x,
@@ -135,10 +129,10 @@ class GlobalForecastModule(LightningModule):
             variables,
             out_variables,
             transform=self.denormalization,
-            metrics=[lat_weighted_mse_val, lat_weighted_rmse, lat_weighted_acc],
+            metrics=[lat_weighted_mse_val, lat_weighted_rmse],
             lat=self.lat,
             clim=self.val_clim,
-            log_postfix=log_postfix,
+            log_postfix=None
         )
 
         loss_dict = {}
@@ -160,12 +154,6 @@ class GlobalForecastModule(LightningModule):
     def test_step(self, batch: Any, batch_idx: int):
         x, y, lead_times, variables, out_variables = batch
 
-        if self.pred_range < 24:
-            log_postfix = f"{self.pred_range}_hours"
-        else:
-            days = int(self.pred_range / 24)
-            log_postfix = f"{days}_days"
-
         all_loss_dicts = self.net.evaluate(
             x,
             y,
@@ -173,10 +161,10 @@ class GlobalForecastModule(LightningModule):
             variables,
             out_variables,
             transform=self.denormalization,
-            metrics=[lat_weighted_mse_val, lat_weighted_rmse, lat_weighted_acc],
+            metrics=[lat_weighted_mse_val, lat_weighted_rmse, lat_weighted_nrmse],
             lat=self.lat,
             clim=self.test_clim,
-            log_postfix=log_postfix,
+            log_postfix=None
         )
 
         loss_dict = {}
@@ -216,7 +204,7 @@ class GlobalForecastModule(LightningModule):
                     "params": no_decay,
                     "lr": self.hparams.lr,
                     "betas": (self.hparams.beta_1, self.hparams.beta_2),
-                    "weight_decay": 0,
+                    "weight_decay": 0
                 },
             ]
         )

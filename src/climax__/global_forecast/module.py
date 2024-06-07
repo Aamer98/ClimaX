@@ -103,7 +103,6 @@ class GlobalForecastModule(LightningModule):
 
     def training_step(self, batch: Any, batch_idx: int):
         x, y, lead_times, variables, out_variables = batch
-        breakpoint()
 
         loss_dict, _ = self.net.forward(x, y, lead_times, variables, out_variables, [lat_weighted_mse], lat=self.lat)
         loss_dict = loss_dict[0]

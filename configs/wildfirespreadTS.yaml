@@ -2,17 +2,17 @@ seed_everything: 42
 
 # ---------------------------- TRAINER -------------------------------------------
 trainer:
-  default_root_dir: ${oc.env:AMLT_OUTPUT_DIR,/home/as26840@ens.ad.etsmtl.ca/repos/ClimaX/exps/climate_projection_climax}
+  default_root_dir: ${oc.env:OUTPUT_DIR,/home/as26840@ens.ad.etsmtl.ca/repos/ClimaX/exps/wildfirespreadTS}
 
   precision: 16
 
-  gpus: 2
+  gpus: null
   num_nodes: 1
   accelerator: gpu
   strategy: ddp
 
   min_epochs: 1
-  max_epochs: 50
+  max_epochs: 100
   enable_progress_bar: true
 
   sync_batchnorm: True
@@ -25,7 +25,7 @@ trainer:
   logger:
     class_path: pytorch_lightning.loggers.tensorboard.TensorBoardLogger
     init_args:
-      save_dir: /home/as26840@ens.ad.etsmtl.ca/repos/ClimaX/logs
+      save_dir: ${trainer.default_root_dir}/logs
       name: null
       version: null
       log_graph: False
@@ -39,8 +39,8 @@ trainer:
 
     - class_path: pytorch_lightning.callbacks.ModelCheckpoint
       init_args:
-        dirpath: "/home/as26840@ens.ad.etsmtl.ca/repos/ClimaX/checkpoints"
-        monitor: "val/w_mse" # name of the logged metric which determines when model is improving
+        dirpath: "${trainer.default_root_dir}/checkpoints"
+        monitor: "val/w_rmse" # name of the logged metric which determines when model is improving
         mode: "min" # "max" means higher metric value is better, can be also "min"
         save_top_k: 1 # save k best models (determined by above metric)
         save_last: True # additionaly always save model from last epoch
@@ -50,7 +50,7 @@ trainer:
 
     - class_path: pytorch_lightning.callbacks.EarlyStopping
       init_args:
-        monitor: "val/w_mse" # name of the logged metric which determines when model is improving
+        monitor: "val/w_rmse" # name of the logged metric which determines when model is improving
         mode: "min" # "max" means higher metric value is better, can be also "min"
         patience: 5 # how many validation epochs of not improving until training stops
         min_delta: 0. # minimum change in the monitored metric needed to qualify as an improvement
@@ -65,57 +65,45 @@ trainer:
 model:
   lr: 5e-4
   beta_1: 0.9
-  beta_2: 0.999
+  beta_2: 0.99
   weight_decay: 1e-5
-  warmup_epochs: 60
-  max_epochs: 600
+  warmup_epochs: 10000
+  max_epochs: 100000
   warmup_start_lr: 1e-8
   eta_min: 1e-8
-  pretrained_path: "/home/aamer98/projects/def-ebrahimi/aamer98/repos/ClimaX/checkpoints/5.625deg.ckpt"
+  pretrained_path: ""
 
   net:
-    class_path: climax.climate_projection.arch.ClimaXClimateBench
+    class_path: climax.arch.ClimaX
     init_args:
-      default_vars: [
-        'CO2',
-        'SO2',
-        'CH4',
-        'BC'
-      ]
-      out_vars: "tas" # diurnal_temperature_range, tas, pr, pr90
-      img_size: [32, 64]
-      time_history: 10
+      default_vars: [None]
+      img_size: [128, 128]
       patch_size: 2
       embed_dim: 1024
       depth: 8
+      decoder_depth: 2
       num_heads: 16
       mlp_ratio: 4
       drop_path: 0.1
       drop_rate: 0.1
-      parallel_patch_embed: False
-      freeze_encoder: True
 
 # ---------------------------- DATA -------------------------------------------
 data:
-  root_dir: /home/data/datasets/climate-learn/climatebench/5.625deg/
-  history: 10
-  list_train_simu: [
-    'ssp126',
-    'ssp370',
-    'ssp585',
-    'historical',
-    'hist-GHG',
-    'hist-aer'
-  ]
-  list_test_simu: ['ssp245']
+  root_dir: /home/as26840@ens.ad.etsmtl.ca/data/wildfirespreadTS_hdf5
   variables: [
-      'CO2',
-      'SO2',
-      'CH4',
-      'BC'
-  ]
-  out_variables: 'tas'
-  train_ratio: 0.9
+      None
+    ]
+  out_variables: ["None"]
+  predict_range: 72
+  hrs_each_step: 1
+  buffer_size: 10000
   batch_size: 1
   num_workers: 1
-  pin_memory: False
+  # pin_memory: False
+  # imported
+  n_leading_observations: 1
+  crop_side_length: 128
+  # load_from_hdf5: true
+  # remove_duplicate_features: false
+  # features_to_keep: null
+  n_leading_observations_test_adjustment: 1

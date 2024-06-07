@@ -19,7 +19,7 @@ from climax.utils.metrics import (
 from climax.utils.pos_embed import interpolate_pos_embed
 
 
-class GlobalForecastModule(LightningModule):
+class FireSpreadModule(LightningModule):
     """Lightning module for global forecasting with the ClimaX model.
 
     Args:
@@ -102,8 +102,10 @@ class GlobalForecastModule(LightningModule):
         self.test_clim = clim
 
     def training_step(self, batch: Any, batch_idx: int):
-        x, y, lead_times, variables, out_variables = batch
+        print('train step')
         breakpoint()
+        x, y, lead_times, variables, out_variables = batch
+        
 
         loss_dict, _ = self.net.forward(x, y, lead_times, variables, out_variables, [lat_weighted_mse], lat=self.lat)
         loss_dict = loss_dict[0]
@@ -120,6 +122,8 @@ class GlobalForecastModule(LightningModule):
         return loss
 
     def validation_step(self, batch: Any, batch_idx: int):
+        print('val step')
+        breakpoint()
         x, y, lead_times, variables, out_variables = batch
 
         if self.pred_range < 24:
@@ -158,6 +162,7 @@ class GlobalForecastModule(LightningModule):
         return loss_dict
 
     def test_step(self, batch: Any, batch_idx: int):
+        print('test step')
         x, y, lead_times, variables, out_variables = batch
 
         if self.pred_range < 24:
