@@ -15,6 +15,8 @@ from climax.utils.pos_embed import (
 
 from .parallelpatchembed import ParallelVarPatchEmbed
 
+from climax.utils.metrics import mse, lat_weighted_mse, binary_cross_entropy
+
 
 class ClimaX(nn.Module):
     """Implements the ClimaX model as described in the paper,
@@ -239,7 +241,7 @@ class ClimaX(nn.Module):
 
         return x
 
-    def forward(self, x, y, lead_times, variables, out_variables, metric, lat):
+    def forward(self, x, y, lead_times, variables, out_variables, metric, lat=None):
         """Forward pass through the model.
 
         Args:
@@ -260,11 +262,21 @@ class ClimaX(nn.Module):
 
         if metric is None:
             loss = None
+        elif metric[0] == mse or metric[0] == binary_cross_entropy:
+            loss = [m(preds, y, out_variables) for m in metric]
         else:
             loss = [m(preds, y, out_variables, lat) for m in metric]
 
         return loss, preds
 
-    def evaluate(self, x, y, lead_times, variables, out_variables, transform, metrics, lat, clim, log_postfix):
+    # def evaluate(self, x, y, lead_times, variables, out_variables, transform, metrics, lat, clim, log_postfix):
+    #     _, preds = self.forward(x, y, lead_times, variables, out_variables, metric=None, lat=lat)
+    #     return [m(preds, y, transform, out_variables, lat, clim, log_postfix) for m in metrics]
+
+    def evaluate(self, x, y, lead_times, variables, out_variables, metrics, transform=None, lat=None, clim=None, log_postfix=None):
         _, preds = self.forward(x, y, lead_times, variables, out_variables, metric=None, lat=lat)
-        return [m(preds, y, transform, out_variables, lat, clim, log_postfix) for m in metrics]
+        
+        if metrics[0] == mse or metrics[0] == binary_cross_entropy:
+            return [m(preds, y, out_variables) for m in metrics]
+        else:
+            return [m(preds, y, transform, out_variables, lat, clim, log_postfix) for m in metrics]

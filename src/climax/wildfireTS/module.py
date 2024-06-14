@@ -15,6 +15,8 @@ from climax.utils.metrics import (
     lat_weighted_mse,
     lat_weighted_mse_val,
     lat_weighted_rmse,
+    mse,
+    binary_cross_entropy
 )
 from climax.utils.pos_embed import interpolate_pos_embed
 
@@ -102,12 +104,10 @@ class FireSpreadModule(LightningModule):
         self.test_clim = clim
 
     def training_step(self, batch: Any, batch_idx: int):
-        print('train step')
-        breakpoint()
         x, y, lead_times, variables, out_variables = batch
-        
+        # loss_dict, _ = self.net.forward(x, y, lead_times, variables, out_variables, [lat_weighted_mse], lat=self.lat)
+        loss_dict, _ = self.net.forward(x, y, lead_times, variables, out_variables, [binary_cross_entropy]) # adapted for binary wildfire dataset
 
-        loss_dict, _ = self.net.forward(x, y, lead_times, variables, out_variables, [lat_weighted_mse], lat=self.lat)
         loss_dict = loss_dict[0]
         for var in loss_dict.keys():
             self.log(
@@ -122,8 +122,7 @@ class FireSpreadModule(LightningModule):
         return loss
 
     def validation_step(self, batch: Any, batch_idx: int):
-        print('val step')
-        breakpoint()
+        # print('val step')
         x, y, lead_times, variables, out_variables = batch
 
         if self.pred_range < 24:
@@ -138,10 +137,11 @@ class FireSpreadModule(LightningModule):
             lead_times,
             variables,
             out_variables,
-            transform=self.denormalization,
-            metrics=[lat_weighted_mse_val, lat_weighted_rmse, lat_weighted_acc],
-            lat=self.lat,
-            clim=self.val_clim,
+            metrics=[mse],
+            # transform=self.denormalization,
+            # metrics=[lat_weighted_mse_val, lat_weighted_rmse, lat_weighted_acc],
+            # lat=self.lat,
+            # clim=self.val_clim,
             log_postfix=log_postfix,
         )
 
@@ -177,10 +177,11 @@ class FireSpreadModule(LightningModule):
             lead_times,
             variables,
             out_variables,
-            transform=self.denormalization,
-            metrics=[lat_weighted_mse_val, lat_weighted_rmse, lat_weighted_acc],
-            lat=self.lat,
-            clim=self.test_clim,
+            metrics=[mse],
+            # transform=self.denormalization,
+            # metrics=[lat_weighted_mse_val, lat_weighted_rmse, lat_weighted_acc],
+            # lat=self.lat,
+            # clim=self.test_clim,
             log_postfix=log_postfix,
         )
 

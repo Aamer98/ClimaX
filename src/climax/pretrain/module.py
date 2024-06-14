@@ -8,7 +8,7 @@ from pytorch_lightning import LightningModule
 
 from climax.arch import ClimaX
 from climax.utils.lr_scheduler import LinearWarmupCosineAnnealingLR
-from climax.utils.metrics import lat_weighted_mse
+from climax.utils.metrics import lat_weighted_mse, mse
 
 
 class PretrainModule(LightningModule):
@@ -50,6 +50,8 @@ class PretrainModule(LightningModule):
         x, y, lead_times, variables, out_variables = batch
 
         loss_dict, _ = self.net.forward(x, y, lead_times, variables, out_variables, [lat_weighted_mse], lat=self.lat)
+        
+        
         loss_dict = loss_dict[0]
         for var in loss_dict.keys():
             self.log(
@@ -60,6 +62,7 @@ class PretrainModule(LightningModule):
                 prog_bar=True,
             )
         loss = loss_dict["loss"]
+        breakpoint()
 
         return loss
 

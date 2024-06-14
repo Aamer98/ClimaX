@@ -17,8 +17,10 @@ from datetime import datetime
 class FireSpreadDataset(Dataset):
     def __init__(self, data_dir: str, included_fire_years: List[int], n_leading_observations: int,
                  crop_side_length: int, load_from_hdf5: bool, is_train: bool, remove_duplicate_features: bool,
-                 stats_years: List[int], n_leading_observations_test_adjustment: Optional[int] = None, 
-                 features_to_keep: Optional[List[int]] = None, return_doy: bool = False):
+                 variables: List[str], out_variables: List[str], stats_years: List[int], 
+                 n_leading_observations_test_adjustment: Optional[int] = None, 
+                 features_to_keep: Optional[List[int]] = None, return_doy: bool = False, lead_time: int = 24
+                 ):
         """_summary_
 
         Args:
@@ -34,6 +36,11 @@ class FireSpreadDataset(Dataset):
         In practice, this means that if n_leading_observations is smaller than this value, some samples are skipped. Defaults to None. If None, nothing is skipped. This is especially used for the train and val set. 
             features_to_keep (Optional[List[int]], optional): _description_. List of feature indices from 0 to 39, indicating which features to keep. Defaults to None, which means using all features.
             return_doy (bool, optional): _description_. Return the day of the year per time step, as an additional feature. Defaults to False.
+            
+            # To match climax format
+            variables (List[str]): _description_. Name of modality variables used in model input.
+            out_variables (List[str]): _description_. Name of modality variables used in model output.
+            lead_time (int): _description_. Time delta for next prediction.
 
         Raises:
             ValueError: _description_ Raised if input values are not in the expected ranges.
@@ -51,6 +58,9 @@ class FireSpreadDataset(Dataset):
         self.n_leading_observations_test_adjustment = n_leading_observations_test_adjustment
         self.included_fire_years = included_fire_years
         self.data_dir = data_dir
+        self.lead_time = lead_time
+        self.variables = variables
+        self.out_variables = out_variables
 
         self.validate_inputs()
 
@@ -188,10 +198,31 @@ class FireSpreadDataset(Dataset):
 
         if self.return_doy:
             return x, y, doys
-        return x, y
+
+        # to align with climax dataloader format
+        lead_time = self.lead_time
+        variables = self.variables
+        out_variables = self.out_variables
+
+        # print(x.shape)
+        # print(y.shape)
+        # print(x.squeeze().shape)
+        # print(y.squeeze().shape)
+
+        return x.squeeze(), y, lead_time, variables, out_variables
 
     def __len__(self):
         return self.length
+
+    # Returns lead time for predicted
+    def __lead_time__(self):
+        return self.lead_time
+        
+    def __variables__(self):
+        return self.variables
+
+    def __out_variables__(self):
+        return self.out_variables
 
     def validate_inputs(self):
         if self.n_leading_observations < 1:

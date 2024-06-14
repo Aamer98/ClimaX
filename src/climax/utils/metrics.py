@@ -3,7 +3,65 @@
 
 import numpy as np
 import torch
+import torch.nn as nn
+import torchmetrics
 from scipy import stats
+
+
+def f1_score(pred, y, vars):
+    """F1 score
+    
+    Args:
+        pred: [B, L, V*p*p]
+        y: [B, V, H, W]
+        vars: list of variable names
+    """
+    
+    breakpoint()
+
+    f1 = torchmetrics.F1Score("binary")
+    loss = f1(pred.squeeze().detach().cpu()[0].flatten(), y.cpu()[0].flatten())
+
+    loss_dict = {}
+
+    with torch.no_grad():
+        for i, var in enumerate(vars):
+            loss_dict[f"f1_{var}"] = loss[:, i].mean()
+
+    loss_dict["f1"] = loss.mean(dim=1).mean()
+    
+    return loss_dict
+
+
+def binary_cross_entropy(pred, y, vars):
+    """Mean squared error
+
+    Args:
+        pred: [B, L, V*p*p]
+        y: [B, V, H, W]
+        vars: list of variable names
+    """
+
+    bce = nn.BCELoss()
+
+    breakpoint()
+    loss = bce(nn.Sigmoid()(pred.squeeze()),y)
+
+    loss_dict = {}
+
+    with torch.no_grad():
+        for i, var in enumerate(vars):
+            if mask is not None:
+                loss_dict[var] = (loss[:, i] * mask).sum() / mask.sum()
+            else:
+                loss_dict[var] = loss[:, i].mean()
+
+    if mask is not None:
+        loss_dict["loss"] = (loss.mean(dim=1) * mask).sum() / mask.sum()
+    else:
+        loss_dict["loss"] = loss.mean(dim=1).mean()
+
+    return loss_dict
 
 
 def mse(pred, y, vars, lat=None, mask=None):
