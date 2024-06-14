@@ -4,6 +4,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+from torch.nn.functional import binary_cross_entropy_with_logits
 import torchmetrics
 from scipy import stats
 
@@ -17,8 +18,6 @@ def f1_score(pred, y, vars):
         vars: list of variable names
     """
     
-    breakpoint()
-
     f1 = torchmetrics.F1Score("binary")
     loss = f1(pred.squeeze().detach().cpu()[0].flatten(), y.cpu()[0].flatten())
 
@@ -42,24 +41,15 @@ def binary_cross_entropy(pred, y, vars):
         vars: list of variable names
     """
 
-    bce = nn.BCELoss()
+    bce = binary_cross_entropy_with_logits
 
-    breakpoint()
-    loss = bce(nn.Sigmoid()(pred.squeeze()),y)
+    loss = bce(nn.Sigmoid()(pred.squeeze()),y.float())
 
     loss_dict = {}
-
     with torch.no_grad():
-        for i, var in enumerate(vars):
-            if mask is not None:
-                loss_dict[var] = (loss[:, i] * mask).sum() / mask.sum()
-            else:
-                loss_dict[var] = loss[:, i].mean()
+        loss_dict[vars[0]] = loss.mean()
 
-    if mask is not None:
-        loss_dict["loss"] = (loss.mean(dim=1) * mask).sum() / mask.sum()
-    else:
-        loss_dict["loss"] = loss.mean(dim=1).mean()
+    loss_dict["loss"] = loss.mean()
 
     return loss_dict
 
