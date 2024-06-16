@@ -40,10 +40,11 @@ def binary_cross_entropy(pred, y, vars):
         y: [B, V, H, W]
         vars: list of variable names
     """
-
+    ()
     bce = binary_cross_entropy_with_logits
+    logits = torch.sigmoid(pred.squeeze(1))
 
-    loss = bce(nn.Sigmoid()(pred.squeeze()),y.float())
+    loss = bce(logits ,y.float())
 
     loss_dict = {}
     with torch.no_grad():

@@ -255,7 +255,7 @@ class ClimaX(nn.Module):
         """
         out_transformers = self.forward_encoder(x, lead_times, variables)  # B, L, D
         preds = self.head(out_transformers)  # B, L, V*p*p
-
+        
         preds = self.unpatchify(preds)
         out_var_ids = self.get_var_ids(tuple(out_variables), preds.device)
         preds = preds[:, out_var_ids]
