@@ -9,9 +9,103 @@ import torchmetrics
 from scipy import stats
 
 
+# self.conf_mat = torchmetrics.ConfusionMatrix("binary")
+
+def iou(pred, y, vars):
+    """IoU
+    
+    Args:
+        pred: [B, L, V*p*p]
+        y: [B, V, H, W]
+        vars: list of variable names
+    """
+
+    iou = torchmetrics.JaccardIndex("binary")
+    pred = torch.round(torch.sigmoid(pred))
+    loss = iou(pred.squeeze(1).cpu(), y.cpu())
+
+    loss_dict = {}
+
+    with torch.no_grad():
+        loss_dict[f"iou_{vars[0]}"] = loss.mean()
+
+    loss_dict["iou"] = loss.mean()
+
+    return loss_dict
+
+
+def recall(pred, y, vars):
+    """Recall
+    
+    Args:
+        pred: [B, L, V*p*p]
+        y: [B, V, H, W]
+        vars: list of variable names
+    """
+
+    rec = torchmetrics.Recall("binary")
+    pred = torch.round(torch.sigmoid(pred))
+    loss = rec(pred.squeeze(1).cpu(), y.cpu())
+
+    loss_dict = {}
+
+    with torch.no_grad():
+        loss_dict[f"recall_{vars[0]}"] = loss.mean()
+
+    loss_dict["recall"] = loss.mean()
+
+    return loss_dict
+
+
+def avg_precision(pred, y, vars):
+    """Average precision
+    
+    Args:
+        pred: [B, L, V*p*p]
+        y: [B, V, H, W]
+        vars: list of variable names
+    """
+
+    prec = torchmetrics.AveragePrecision("binary")
+    pred = torch.round(torch.sigmoid(pred))
+    loss = prec(pred.squeeze(1).cpu(), y.cpu())
+
+    loss_dict = {}
+
+    with torch.no_grad():
+        loss_dict[f"avg_precision_{vars[0]}"] = loss.mean()
+
+    loss_dict["avg_precision"] = loss.mean()
+
+    return loss_dict
+
+
+def precision(pred, y, vars):
+    """Precision
+    
+    Args:
+        pred: [B, L, V*p*p]
+        y: [B, V, H, W]
+        vars: list of variable names
+    """
+
+    prec = torchmetrics.Precision("binary")
+    pred = torch.round(torch.sigmoid(pred))
+    loss = prec(pred.squeeze(1).cpu(), y.cpu())
+
+    loss_dict = {}
+
+    with torch.no_grad():
+        loss_dict[f"precision_{vars[0]}"] = loss.mean()
+
+    loss_dict["precision"] = loss.mean()
+
+    return loss_dict
+
+
 def f1_score(pred, y, vars):
     """F1 score
-    
+
     Args:
         pred: [B, L, V*p*p]
         y: [B, V, H, W]
@@ -19,16 +113,16 @@ def f1_score(pred, y, vars):
     """
     
     f1 = torchmetrics.F1Score("binary")
-    loss = f1(pred.squeeze().detach().cpu()[0].flatten(), y.cpu()[0].flatten())
+    pred = torch.round(torch.sigmoid(pred))
+    loss = f1(pred.squeeze(1).cpu(), y.cpu())
 
     loss_dict = {}
 
     with torch.no_grad():
-        for i, var in enumerate(vars):
-            loss_dict[f"f1_{var}"] = loss[:, i].mean()
+        loss_dict[f"f1_{vars[0]}"] = loss.mean()
 
-    loss_dict["f1"] = loss.mean(dim=1).mean()
-    
+    loss_dict["f1"] = loss.mean()
+
     return loss_dict
 
 
