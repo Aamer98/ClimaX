@@ -5,7 +5,10 @@ import os
 
 from climax.wildfireTS.datamodule import FireSpreadDataModule
 from climax.wildfireTS.module import FireSpreadModule
+from utils import wandb_setup
 from pytorch_lightning.cli import LightningCLI
+import wandb
+
 
 
 def main():
@@ -20,7 +23,7 @@ def main():
         parser_kwargs={"parser_mode": "omegaconf", "error_handler": None},
     )
     os.makedirs(cli.trainer.default_root_dir, exist_ok=True)
-
+    wandb_setup(cli)
 
     # normalization = cli.datamodule.output_transforms
     # mean_norm, std_norm = normalization.mean, normalization.std

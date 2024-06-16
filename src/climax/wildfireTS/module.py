@@ -11,13 +11,11 @@ from torchvision.transforms import transforms
 from climax.arch import ClimaX
 from climax.utils.lr_scheduler import LinearWarmupCosineAnnealingLR
 from climax.utils.metrics import (
-    lat_weighted_acc,
-    lat_weighted_mse,
-    lat_weighted_mse_val,
-    lat_weighted_rmse,
-    mse,
     binary_cross_entropy,
-    
+    iou,
+    recall,
+    avg_precision,
+    precision
 )
 from climax.utils.pos_embed import interpolate_pos_embed
 
@@ -106,7 +104,6 @@ class FireSpreadModule(LightningModule):
 
     def training_step(self, batch: Any, batch_idx: int):
         x, y, lead_times, variables, out_variables = batch
-        # loss_dict, _ = self.net.forward(x, y, lead_times, variables, out_variables, [lat_weighted_mse], lat=self.lat)
         loss_dict, _ = self.net.forward(x, y, lead_times, variables, out_variables, [binary_cross_entropy]) # adapted for binary wildfire dataset
 
         loss_dict = loss_dict[0]
@@ -138,11 +135,7 @@ class FireSpreadModule(LightningModule):
             lead_times,
             variables,
             out_variables,
-            metrics=[mse],
-            # transform=self.denormalization,
-            # metrics=[lat_weighted_mse_val, lat_weighted_rmse, lat_weighted_acc],
-            # lat=self.lat,
-            # clim=self.val_clim,
+            metrics=[binary_cross_entropy,iou,recall,avg_precision,precision],
             log_postfix=log_postfix,
         )
 
@@ -178,11 +171,7 @@ class FireSpreadModule(LightningModule):
             lead_times,
             variables,
             out_variables,
-            metrics=[mse],
-            # transform=self.denormalization,
-            # metrics=[lat_weighted_mse_val, lat_weighted_rmse, lat_weighted_acc],
-            # lat=self.lat,
-            # clim=self.test_clim,
+            metrics=[binary_cross_entropy,iou,recall,avg_precision,precision],
             log_postfix=log_postfix,
         )
 
