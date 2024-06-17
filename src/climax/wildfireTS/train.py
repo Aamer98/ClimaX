@@ -25,14 +25,7 @@ def main():
     os.makedirs(cli.trainer.default_root_dir, exist_ok=True)
     wandb_setup(cli)
 
-    # normalization = cli.datamodule.output_transforms
-    # mean_norm, std_norm = normalization.mean, normalization.std
-
-    # mean_denorm, std_denorm = -mean_norm / std_norm, 1 / std_norm
-    # cli.model.set_denormalization(mean_denorm, std_denorm)
     cli.model.set_pred_range(cli.datamodule.hparams.predict_range)
-    # cli.model.set_val_clim(cli.datamodule.val_clim)
-    # cli.model.set_test_clim(cli.datamodule.test_clim)
 
     # fit() runs the training
     cli.trainer.fit(cli.model, datamodule=cli.datamodule)

@@ -4,6 +4,7 @@
 # credits: https://github.com/ashleve/lightning-hydra-template/blob/main/src/models/mnist_module.py
 from typing import Any
 
+import wandb
 import torch
 from pytorch_lightning import LightningModule
 from torchvision.transforms import transforms
@@ -12,6 +13,7 @@ from climax.arch import ClimaX
 from climax.utils.lr_scheduler import LinearWarmupCosineAnnealingLR
 from climax.utils.metrics import (
     binary_cross_entropy,
+    f1_score,
     iou,
     recall,
     avg_precision,
@@ -104,9 +106,19 @@ class FireSpreadModule(LightningModule):
 
     def training_step(self, batch: Any, batch_idx: int):
         x, y, lead_times, variables, out_variables = batch
-        loss_dict, _ = self.net.forward(x, y, lead_times, variables, out_variables, [binary_cross_entropy]) # adapted for binary wildfire dataset
+        all_loss_dicts, _ = self.net.forward(x, y, lead_times, variables, out_variables, 
+                                            [binary_cross_entropy,f1_score,iou,recall,
+                                            avg_precision,precision])
 
-        loss_dict = loss_dict[0]
+        loss_dict = {}
+        for d in all_loss_dicts:
+            for k in d.keys():
+                loss_dict[k] = d[k]
+
+        wandb.log({"train_loss_epoch": loss_dict['loss'], "train_f1": loss_dict['f1'], 
+                  "train_precision": loss_dict, "train_avg_precision": loss_dict['avg_precision'], 
+                  "train_recall": loss_dict['recall'], "train_iou": loss_dict['iou']})
+
         for var in loss_dict.keys():
             self.log(
                 "train/" + var,
@@ -135,7 +147,7 @@ class FireSpreadModule(LightningModule):
             lead_times,
             variables,
             out_variables,
-            metrics=[binary_cross_entropy,iou,recall,avg_precision,precision],
+            metrics=[binary_cross_entropy,f1_score,iou,recall,avg_precision,precision],
             log_postfix=log_postfix,
         )
 
@@ -153,6 +165,11 @@ class FireSpreadModule(LightningModule):
                 prog_bar=False,
                 sync_dist=True,
             )
+        
+        wandb.log({"val_loss": loss_dict['loss'], "val_f1": loss_dict['f1'], 
+                   "val_precision": loss_dict, "val_avg_precision": loss_dict['avg_precision'], 
+                   "val_recall": loss_dict['recall'], "val_iou": loss_dict['iou']})
+
         return loss_dict
 
     def test_step(self, batch: Any, batch_idx: int):
@@ -171,7 +188,7 @@ class FireSpreadModule(LightningModule):
             lead_times,
             variables,
             out_variables,
-            metrics=[binary_cross_entropy,iou,recall,avg_precision,precision],
+            metrics=[binary_cross_entropy,f1_score,iou,recall,avg_precision,precision],
             log_postfix=log_postfix,
         )
 
@@ -189,6 +206,11 @@ class FireSpreadModule(LightningModule):
                 prog_bar=False,
                 sync_dist=True,
             )
+
+        wandb.log({"test_loss": loss_dict['loss'], "test_f1": loss_dict['f1'], 
+                   "test_precision": loss_dict, "test_avg_precision": loss_dict['avg_precision'], 
+                   "test_recall": loss_dict['recall'], "test_iou": loss_dict['iou']})
+
         return loss_dict
 
     def configure_optimizers(self):

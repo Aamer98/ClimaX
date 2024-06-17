@@ -1,6 +1,8 @@
+import os
 from typing import List
 import torch
 import numpy as np
+import wandb
 
 
 def wandb_setup(cli) -> None:
@@ -35,16 +37,22 @@ def wandb_setup(cli) -> None:
     wandb.save(config_file_name, policy="now", base_path=wandb.run.dir)
     wandb.define_metric("train_loss_epoch", summary="min")
     wandb.define_metric("val_loss", summary="min")
+    wandb.define_metric("test_loss", summary="min")
     wandb.define_metric("train_f1_epoch", summary="max")
     wandb.define_metric("val_f1", summary="max")
+    wandb.define_metric("test_f1", summary="max")
     wandb.define_metric("train_precision_epoch", summary="max")
     wandb.define_metric("val_precision", summary="max")
+    wandb.define_metric("test_precision", summary="max")
     wandb.define_metric("train_avg_precision_epoch", summary="max")
     wandb.define_metric("val_avg_precision", summary="max")
+    wandb.define_metric("test_avg_precision", summary="max")
     wandb.define_metric("train_recall_epoch", summary="max")
-    wandb.define_metric("val_recall", summary="max")      
+    wandb.define_metric("val_recall", summary="max")
+    wandb.define_metric("test_recall", summary="max")      
     wandb.define_metric("train_iou_epoch", summary="max")
     wandb.define_metric("val_iou", summary="max") 
+    wandb.define_metric("test_iou", summary="max") 
 
 
 
