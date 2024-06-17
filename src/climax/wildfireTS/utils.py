@@ -19,7 +19,7 @@ def wandb_setup(cli) -> None:
 
     wandb.init(
         # Set the project where this run will be logged
-        project="ClimaX_wildfireTS", 
+        project="ClimaX_wildfireTS_avgprec", 
         # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
         # Track hyperparameters and run metadata
         config={
