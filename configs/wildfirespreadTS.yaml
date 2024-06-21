@@ -71,6 +71,7 @@ model:
   max_epochs: 100000
   warmup_start_lr: 1e-8
   eta_min: 1e-8
+  experiment: "test"
   pretrained_path: ""
 
   net:

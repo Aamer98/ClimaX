@@ -41,6 +41,7 @@ class FireSpreadModule(LightningModule):
     def __init__(
         self,
         net: ClimaX,
+        experiment: str = "",
         pretrained_path: str = "",
         lr: float = 5e-4,
         beta_1: float = 0.9,
