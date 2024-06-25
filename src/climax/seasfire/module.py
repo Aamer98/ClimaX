@@ -118,9 +118,9 @@ class SeasfireModule(LightningModule):
             for k in d.keys():
                 loss_dict[k] = d[k]
 
-        wandb.log({"train_loss_epoch": loss_dict['loss'], "train_f1": loss_dict['f1'], 
-                  "train_precision": loss_dict, "train_avg_precision": loss_dict['avg_precision'], 
-                  "train_recall": loss_dict['recall'], "train_iou": loss_dict['iou']})
+        # wandb.log({"train_loss_epoch": loss_dict['loss'], "train_f1": loss_dict['f1'], 
+        #           "train_precision": loss_dict, "train_avg_precision": loss_dict['avg_precision'], 
+        #           "train_recall": loss_dict['recall'], "train_iou": loss_dict['iou']})
 
         for var in loss_dict.keys():
             self.log(
@@ -169,9 +169,9 @@ class SeasfireModule(LightningModule):
                 sync_dist=True,
             )
         
-        wandb.log({"val_loss": loss_dict['loss'], "val_f1": loss_dict['f1'], 
-                   "val_precision": loss_dict, "val_avg_precision": loss_dict['avg_precision'], 
-                   "val_recall": loss_dict['recall'], "val_iou": loss_dict['iou']})
+        # wandb.log({"val_loss": loss_dict['loss'], "val_f1": loss_dict['f1'], 
+        #            "val_precision": loss_dict, "val_avg_precision": loss_dict['avg_precision'], 
+        #            "val_recall": loss_dict['recall'], "val_iou": loss_dict['iou']})
 
         return loss_dict
 
@@ -210,9 +210,39 @@ class SeasfireModule(LightningModule):
                 sync_dist=True,
             )
 
-        wandb.log({"test_loss": loss_dict['loss'], "test_f1": loss_dict['f1'], 
-                   "test_precision": loss_dict, "test_avg_precision": loss_dict['avg_precision'], 
-                   "test_recall": loss_dict['recall'], "test_iou": loss_dict['iou']})
+        # self.log(
+        #     "test_loss",
+        #     loss_dict['loss'],
+        #     on_step=True,
+        #     on_epoch=True,
+        #     prog_bar=True,
+        #     logger=True,
+        #     sync_dist=True,
+        # )
+
+        # self.log(
+        #     "test_f1",
+        #     loss_dict['f1'],
+        #     on_step=True,
+        #     on_epoch=True,
+        #     prog_bar=True,
+        #     logger=True,
+        #     sync_dist=True,
+        # )
+
+        # self.log(
+        #     "test_precision",
+        #     loss_dict['precision'],
+        #     on_step=True,
+        #     on_epoch=True,
+        #     prog_bar=True,
+        #     logger=True,
+        #     sync_dist=True,
+        # )
+
+        # wandb.log({"test_loss": loss_dict['loss'], "test_f1": loss_dict['f1'], 
+        #            "test_precision": loss_dict['precision'], "test_avg_precision": loss_dict['avg_precision'], 
+        #            "test_recall": loss_dict['recall'], "test_iou": loss_dict['iou']})
 
         return loss_dict
 

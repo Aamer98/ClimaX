@@ -37,6 +37,7 @@ import hydra
 import pytorch_lightning as pl
 from omegaconf import DictConfig
 from pytorch_lightning import LightningDataModule
+from pytorch_lightning.utilities import rank_zero_only
 
 import wandb
 from pytorch_lightning.cli import LightningCLI
@@ -44,10 +45,63 @@ from climax.seasfire.module import SeasfireModule
 from climax.seasfire.datamodules.seasfire_spatial_datamodule import SeasFireSpatialDataModule
 from utils import wandb_setup
 
+
+
+class MyLightningCLI(LightningCLI):
+
+    def before_fit(self):
+        self.wandb_setup()
+
+    def before_test(self):
+        self.wandb_setup()
+
+    def before_validate(self):
+        self.wandb_setup()
+
+    @rank_zero_only
+    def wandb_setup(self, cli):
+        """
+        Save the config used by LightningCLI to disk, then save that file to wandb.
+        Using wandb.config adds some strange formating that means we'd have to do some 
+        processing to be able to use it again as CLI input.
+
+        Also define min and max metrics in wandb, because otherwise it just reports the 
+        last known values, which is not what we want.
+        """
+
+        wandb.init(
+        # Set the project where this run will be logged
+        project=f"ClimaX_seasfire", 
+        # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
+        # Track hyperparameters and run metadata
+        config={
+                "learning_rate": self.model.hparams.lr,
+                "seed": self.config.seed_everything,
+                "batch_size": self.datamodule.hparams.batch_size,
+            })
+        config_file_name = os.path.join(wandb.run.dir, "cli_config.yaml")
+        # breakpoint()
+        cfg_string = self.parser.dump(self.config, skip_none=False)
+        with open(config_file_name, "w") as f:
+            f.write(cfg_string)
+        wandb.save(config_file_name, policy="now", base_path=wandb.run.dir)
+        wandb.define_metric("train_loss", summary="min")
+        wandb.define_metric("val_loss", summary="min")
+        wandb.define_metric("train_f1", summary="max")
+        wandb.define_metric("val_f1", summary="max")
+        wandb.define_metric("train_precision", summary="max")
+        wandb.define_metric("val_precision", summary="max")
+        wandb.define_metric("train_recall", summary="max")
+        wandb.define_metric("val_recall", summary="max")
+
+
+
 def main():
+    # cli = MyLightningCLI(BaseModel, FireSpreadDataModule, subclass_mode_model=True, save_config_kwargs={
+    #     "overwrite": True}, parser_kwargs={"parser_mode": "yaml"}, run=False)
 
     # Initialize Lightning with the model and data modules, and instruct it to parse the config yml
-    cli = LightningCLI(
+    cli = MyLightningCLI(
         model_class=SeasfireModule,
         datamodule_class=SeasFireSpatialDataModule,
         seed_everything_default=42,
@@ -55,9 +109,13 @@ def main():
         run=False,
         auto_registry=True,
         parser_kwargs={"parser_mode": "omegaconf", "error_handler": None},
+        # subclass_mode_model=True, 
+        save_config_kwargs={"overwrite": True}
     )
-    os.makedirs(cli.trainer.default_root_dir, exist_ok=True)
-    wandb_setup(cli)
+    cli.wandb_setup(cli)
+    # os.makedirs(cli.trainer.default_root_dir, exist_ok=True)
+    # wandb_setup(cli)
+
 
     cli.model.set_pred_range(cli.datamodule.hparams.predict_range)
 
