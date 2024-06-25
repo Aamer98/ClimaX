@@ -204,6 +204,9 @@ class FireSpreadDataset(Dataset):
         variables = self.variables
         out_variables = self.out_variables
 
+        print(x.shape)
+        print(y.shape)
+
         return x.squeeze(), y, lead_time, variables, out_variables
 
     def __len__(self):

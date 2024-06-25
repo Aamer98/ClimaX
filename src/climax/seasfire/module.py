@@ -22,7 +22,7 @@ from climax.utils.metrics import (
 from climax.utils.pos_embed import interpolate_pos_embed
 
 
-class FireSpreadModule(LightningModule):
+class SeasfireModule(LightningModule):
     """Lightning module for global forecasting with the ClimaX model.
 
     Args:
@@ -108,6 +108,7 @@ class FireSpreadModule(LightningModule):
 
     def training_step(self, batch: Any, batch_idx: int):
         x, y, lead_times, variables, out_variables = batch
+        
         all_loss_dicts, _ = self.net.forward(x, y, lead_times, variables, out_variables, 
                                             [binary_cross_entropy,f1_score,iou,recall,
                                             avg_precision,precision])
@@ -135,9 +136,8 @@ class FireSpreadModule(LightningModule):
 
     def validation_step(self, batch: Any, batch_idx: int):
         # print('val step')
-        breakpoint()
         x, y, lead_times, variables, out_variables = batch
-
+        
         if self.pred_range < 24:
             log_postfix = f"{self.pred_range}_hours"
         else:
@@ -176,9 +176,9 @@ class FireSpreadModule(LightningModule):
         return loss_dict
 
     def test_step(self, batch: Any, batch_idx: int):
-        print('test step')
+        # print('test step')
         x, y, lead_times, variables, out_variables = batch
-
+        
         if self.pred_range < 24:
             log_postfix = f"{self.pred_range}_hours"
         else:

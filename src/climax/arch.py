@@ -216,7 +216,7 @@ class ClimaX(nn.Module):
                 id = var_ids[i]
                 embeds.append(self.token_embeds[id](x[:, i : i + 1]))
             x = torch.stack(embeds, dim=1)  # B, V, L, D
-
+        
         # add variable embedding
         var_embed = self.get_var_emb(self.var_embed, variables)
         x = x + var_embed.unsqueeze(2)  # B, V, L, D
@@ -233,7 +233,7 @@ class ClimaX(nn.Module):
         x = x + lead_time_emb  # B, L, D
 
         x = self.pos_drop(x)
-
+        
         # apply Transformer blocks
         for blk in self.blocks:
             x = blk(x)

@@ -75,8 +75,6 @@ class FireSpreadDataModule(LightningDataModule):
         num_workers: int = 0,
         pin_memory: bool = False,
 
-
-
     ):
         super().__init__()
         if num_workers > 1:

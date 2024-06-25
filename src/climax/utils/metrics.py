@@ -13,7 +13,7 @@ from scipy import stats
 
 def iou(pred, y, vars):
     """IoU
-    
+
     Args:
         pred: [B, L, V*p*p]
         y: [B, V, H, W]
@@ -36,7 +36,7 @@ def iou(pred, y, vars):
 
 def recall(pred, y, vars):
     """Recall
-    
+
     Args:
         pred: [B, L, V*p*p]
         y: [B, V, H, W]

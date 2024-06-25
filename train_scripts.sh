@@ -9,3 +9,6 @@ python src/climax/global_forecast/train.py --config configs/global_forecast_clim
 
 # wildfire
 CUDA_VISIBLE_DEVICES=1 python src/climax/wildfireTS/train.py --config configs/wildfirespreadTS.yaml --trainer.strategy=ddp --trainer.devices=1 --trainer.max_epochs=50 --data.root_dir=/home/as26840@ens.ad.etsmtl.ca/data/wildfirespreadTS_hdf5 --data.predict_range=24 --data.batch_size=2 --model.pretrained_path='https://huggingface.co/tungnd/climax/resolve/main/1.40625deg.ckpt' --model.lr=5e-7 --model.beta_1="0.9" --model.beta_2="0.99" --model.weight_decay=1e-5
+
+# SeasFire
+CUDA_VISIBLE_DEVICES=0 python src/climax/seasfire/train.py --config configs/seasfire.yaml --trainer.strategy=ddp --trainer.devices=1 --trainer.max_epochs=50 --data.root_dir=/home/as26840@ens.ad.etsmtl.ca/data/seasfire/SeasFireCube_v3.zarr --data.predict_range=24 --data.batch_size=2 --model.pretrained_path='https://huggingface.co/tungnd/climax/resolve/main/1.40625deg.ckpt' --model.lr=5e-7 --model.beta_1="0.9" --model.beta_2="0.99" --model.weight_decay=1e-5
